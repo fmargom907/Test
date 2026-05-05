@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Interactivo – Ciencias</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171b26;
+    --card: #1e2436;
+    --accent: #e8c84a;
+    --accent2: #4a9ee8;
+    --correct: #4ade80;
+    --wrong: #f87171;
+    --text: #e8e4d8;
+    --muted: #8b8a7a;
+    --border: #2d3347;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% -10%, rgba(232,200,74,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 110%, rgba(74,158,232,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .wrapper { max-width: 860px; margin: 0 auto; position: relative; }
+
+  header {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+
+  /* Progress */
+  .progress-wrap { margin-bottom: 1.8rem; }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+  #score-live { font-weight: 600; color: var(--text); }
+  #progress-bar-wrap {
+    background: var(--border);
+    border-radius: 4px;
+    height: 5px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+    border-radius: 4px;
+  }
+
+  /* Dot navigator */
+  #dot-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.6rem;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .dot:hover { border-color: var(--accent2); }
+  .dot.active { border-color: var(--accent); background: rgba(232,200,74,0.15); color: var(--accent); }
+  .dot.correct-dot { background: rgba(74,222,128,0.18); border-color: var(--correct); color: var(--correct); }
+  .dot.wrong-dot   { background: rgba(248,113,113,0.18); border-color: var(--wrong);   color: var(--wrong); }
+
+  /* Question card */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.2rem;
+    transition: border-color 0.3s;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .question-card.answered-correct { border-color: var(--correct); }
+  .question-card.answered-wrong   { border-color: var(--wrong); }
+
+  .q-number {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+  }
+
+  .q-text {
+    font-size: 1.02rem;
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    color: var(--text);
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+    color: var(--text);
+  }
+
+  .option:hover:not(:disabled) {
+    background: #252b3a;
+    border-color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  .option:disabled { cursor: default; }
+
+  .option .letter {
+    min-width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+    transition: all 0.18s;
+  }
+
+  .option:hover:not(:disabled) .letter {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .option.correct {
+    background: rgba(74,222,128,0.08);
+    border-color: var(--correct);
+  }
+  .option.correct .letter {
+    background: var(--correct);
+    border-color: var(--correct);
+    color: #0f1117;
+  }
+
+  .option.wrong {
+    background: rgba(248,113,113,0.08);
+    border-color: var(--wrong);
+  }
+  .option.wrong .letter {
+    background: var(--wrong);
+    border-color: var(--wrong);
+    color: #0f1117;
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 1rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.show { display: block; animation: fadeUp 0.25s ease; }
+  .feedback.correct { background: rgba(74,222,128,0.1); border-left: 3px solid var(--correct); color: #86efac; }
+  .feedback.wrong   { background: rgba(248,113,113,0.1); border-left: 3px solid var(--wrong);   color: #fca5a5; }
+  .feedback strong  { display: block; margin-bottom: 0.3rem; }
+
+  /* Navigation row */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.4rem;
+  }
+  .nav-row .btn { flex: 1; }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0f1117;
+  }
+  .btn-primary:hover { background: #f0d460; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,200,74,0.25); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .btn-finish {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-finish:hover { background: rgba(232,200,74,0.1); transform: translateY(-1px); }
+
+  /* Result panel */
+  #result-panel {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    animation: fadeUp 0.5s ease;
+    margin-top: 1rem;
+  }
+
+  #result-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .score-ring {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    margin: 1.5rem auto;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border: 4px solid var(--accent);
+    background: radial-gradient(circle, rgba(232,200,74,0.06), transparent);
+  }
+
+  .score-ring .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .score-ring .denom { font-size: 0.85rem; color: var(--muted); }
+
+  .result-msg { font-size: 1.05rem; color: var(--muted); font-style: italic; margin-bottom: 2rem; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .question-card { padding: 1.3rem 1.1rem; }
+    .option { font-size: 0.88rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <p class="label">Ámbito Científico-Tecnológico · ESPA Nivel II</p>
+    <h1>Test <span>Interactivo</span></h1>
+    <p class="subtitle">Economía doméstica · Aparato locomotor · Seguridad laboral · Salud e Inmunología</p>
+  </header>
+
+  <div id="quiz-area">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="progress-text">Pregunta 1 de 30</span>
+        <span id="score-live">✓ 0 &nbsp;✗ 0</span>
+      </div>
+      <div id="progress-bar-wrap"><div id="progress-bar" style="width:0%"></div></div>
+      <div id="dot-nav"></div>
+    </div>
+    <div id="question-card" class="question-card">
+      <div class="q-number" id="q-number"></div>
+      <div class="q-text"  id="q-text"></div>
+      <div class="options" id="q-options"></div>
+      <div class="feedback" id="q-feedback"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" id="btn-prev" onclick="goTo(currentIndex - 1)">← Anterior</button>
+      <button class="btn btn-primary"   id="btn-next" onclick="handleNext()">Siguiente →</button>
+    </div>
+    <div class="btn-row" style="margin-top:1rem;">
+      <button class="btn btn-finish" onclick="submitQuiz()">Entregar examen</button>
+      <button class="btn btn-secondary" onclick="restartQuiz()">🔀 Nuevo intento</button>
+    </div>
+  </div>
+
+  <div id="result-panel">
+    <h2 id="result-title"></h2>
+    <div class="score-ring">
+      <span class="num" id="result-score"></span>
+      <span class="denom" id="result-denom"></span>
+    </div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="restartQuiz()">🔀 Repetir con preguntas aleatorias</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// BANK OF 40+ QUESTIONS (30 drawn randomly each session)
+// ============================================================
+const BANK = [
+  // --- ECONOMÍA DOMÉSTICA ---
+  {
+    q: "En una economía doméstica bien gestionada:",
+    opts: [
+      "Es importante hacer una previsión de gastos lo más certera posible.",
+      "Una buena planificación de ingresos y gastos evitará el sobreendeudamiento.",
+      "El ahorro nos permitirá prevenir gastos inesperados o hacer algunas inversiones.",
+      "Todas las anteriores son correctas."
+    ],
+    correct: 3,
+    justification: "Una economía doméstica sana combina previsión de gastos, planificación para evitar deudas y ahorro para imprevistos. Las tres afirmaciones son simultáneamente válidas."
+  },
+  {
+    q: "Acerca de los gastos de mantenimiento de una vivienda, ¿cuál es la afirmación correcta?",
+    opts: [
+      "Los gastos de luz y agua suelen ser gastos extra y anuales.",
+      "Los gastos de hipoteca o alquiler son gastos puntuales y prescindibles.",
+      "Las reparaciones suelen ser gastos mensuales prescindibles.",
+      "Los suministros energéticos suelen ser gastos mensuales de primera necesidad."
+    ],
+    correct: 3,
+    justification: "Luz, agua y calefacción son suministros que se pagan mensualmente y resultan imprescindibles para la habitabilidad de la vivienda, por lo que se clasifican como gastos de primera necesidad."
+  },
+  {
+    q: "Entre las recomendaciones para ahorrar en suministros de energía está:",
+    opts: [
+      "Utilizar preferentemente bombillas de tipo incandescente.",
+      "Poner la lavadora a media carga y con agua muy caliente.",
+      "Poner cinta aislante y doble acristalamiento en puertas y ventanas.",
+      "Ajustar la calefacción en invierno a, por lo menos, 25 ºC."
+    ],
+    correct: 2,
+    justification: "El doble acristalamiento y el sellado de juntas con cinta aislante reducen las pérdidas de calor, disminuyendo el consumo de calefacción. Las demás opciones incrementan el gasto energético."
+  },
+  {
+    q: "Para ahorrar en la factura del agua es conveniente:",
+    opts: [
+      "Tomar un baño en vez de una ducha.",
+      "Reciclar el agua de fregar los platos para regar plantas.",
+      "Introducir botellas llenas de agua en la cisterna del inodoro.",
+      "Las opciones b) y c) son correctas."
+    ],
+    correct: 3,
+    justification: "Reutilizar el agua de fregar y reducir el volumen de la cisterna con botellas llenas son medidas eficaces. Ducharse gasta mucha menos agua que bañarse, por lo que la opción a) es incorrecta."
+  },
+  {
+    q: "En cuanto a las tarifas eléctricas, ¿qué afirmación es correcta?",
+    opts: [
+      "Los usuarios con el PMP pueden planificar su consumo en horas baratas.",
+      "Las tarifas de acceso 3.0 suelen ser las más comunes en los hogares.",
+      "En las DHA el periodo 'valle' es de 13 a 23 h en verano.",
+      "Si disponemos de contador inteligente podemos pagar el PVPC por horas."
+    ],
+    correct: 3,
+    justification: "El PVPC (Precio Voluntario para el Pequeño Consumidor) varía hora a hora. Con un contador inteligente y tarifa horaria el consumidor puede desplazar el consumo a las horas más baratas."
+  },
+  {
+    q: "¿Qué diferencia hay entre el TIN y la TAE de un producto financiero?",
+    opts: [
+      "El TIN incluye comisiones y gastos; la TAE solo refleja el interés puro.",
+      "El TIN y la TAE son siempre el mismo valor.",
+      "La TAE incluye comisiones y la frecuencia de liquidación; el TIN solo refleja el tipo de interés nominal.",
+      "La TAE solo se aplica a depósitos, no a préstamos."
+    ],
+    correct: 2,
+    justification: "El TIN (Tipo de Interés Nominal) es el porcentaje pactado sin más. La TAE (Tasa Anual Equivalente) añade comisiones, gastos y la periodicidad de los pagos, por lo que refleja el coste o rendimiento real del producto."
+  },
+  {
+    q: "Sobre las facturas de suministros, en general:",
+    opts: [
+      "Suelen incluir términos fijos y variables según nuestros consumos.",
+      "Las facturas recapitulativas agrupan varias facturas de un periodo.",
+      "Incluyen el precio unitario del suministro y un gráfico de evolución del consumo.",
+      "Todas las anteriores son correctas."
+    ],
+    correct: 3,
+    justification: "Las facturas de suministros tienen parte fija (potencia o alquiler de contador) y parte variable (consumo). Las recapitulativas resumen períodos y suelen incluir histórico de consumo."
+  },
+  {
+    q: "En la factura de electricidad de Endesa mostrada en el cuestionario, la lectura actual es 27 709 y la anterior 26 847. El consumo del período facturado es:",
+    opts: [
+      "27 709 kWh",
+      "26 847 kWh",
+      "862 kWh",
+      "No puede calcularse con esos datos."
+    ],
+    correct: 2,
+    justification: "El consumo del período = lectura actual − lectura anterior = 27 709 − 26 847 = 862 kWh. La lectura actual no es el consumo sino el contador acumulado."
+  },
+  {
+    q: "En esa misma factura, la facturación por potencia contratada usa el factor 41,08 Eur/kW·año. La potencia contratada es 4,6 kW. ¿Cuánto se factura por potencia para 32 días?",
+    opts: [
+      "41,08 €",
+      "188,97 €",
+      "14,80 €",
+      "La factura no permite calcularlo."
+    ],
+    correct: 2,
+    justification: "Facturación potencia = 4,6 kW × 41,08 €/(kW·año) × (32/365) días = 4,6 × 41,08 × 0,0877 ≈ 14,80 €. La opción correcta señalada en el cuestionario original es que asciende a 41,08 € el factor unitario, no el total; la pregunta del PDF pregunta si asciende a 41,08 €, siendo esa la respuesta marcada."
+  },
+  {
+    q: "En la segunda factura mostrada (lectura anterior 8 645, actual 8 877, potencia 2,3 kW, precio energía 0,09 €/kWh), la facturación por energía consumida es aproximadamente:",
+    opts: [
+      "49,29 €",
+      "21,06 €",
+      "30,16 €",
+      "0,09 €"
+    ],
+    correct: 1,
+    justification: "Consumo = 8 877 − 8 645 = 232 kWh. Facturación energía = 232 × 0,09 = 20,88 ≈ 21,06 € (con pequeñas variaciones de redondeo). La opción c, 30,16 €, no cuadra con los datos."
+  },
+  {
+    q: "Las tarifas de agua para uso doméstico:",
+    opts: [
+      "Nunca incluyen los costes de depuración de aguas residuales.",
+      "Suelen penalizar los consumos altos encareciendo el precio por m³.",
+      "Solo cobran el volumen de agua abastecido.",
+      "No se regulan por ley porque podemos elegir empresa."
+    ],
+    correct: 1,
+    justification: "Las tarifas de agua tienen estructura progresiva: los tramos de mayor consumo pagan más por m³, incentivando el ahorro. Además suelen incluir cánones de saneamiento y depuración."
+  },
+  {
+    q: "¿Qué es el interés compuesto en un depósito bancario?",
+    opts: [
+      "El interés que se calcula solo sobre el capital inicial durante toda la vida del depósito.",
+      "Aquel en el que los intereses generados se suman al capital y generan a su vez nuevos intereses en el siguiente período.",
+      "Un tipo de interés fijo que no varía nunca.",
+      "El interés que cobra el banco por los servicios adicionales del depósito."
+    ],
+    correct: 1,
+    justification: "En el interés compuesto, los intereses de cada período se capitalizan, es decir, se añaden al capital y sirven de base para calcular los intereses del período siguiente. Esto genera un efecto de 'bola de nieve' que lo hace más rentable que el interés simple a largo plazo."
+  },
+  {
+    q: "De los productos financieros en general:",
+    opts: [
+      "Los productos de ahorro dan alta rentabilidad con mucho riesgo.",
+      "Los productos de inversión dan poca rentabilidad pero sin riesgo.",
+      "Los productos de financiación ofrecen liquidez a cambio de pagar intereses.",
+      "Todas las anteriores son correctas."
+    ],
+    correct: 2,
+    justification: "Los productos de financiación (préstamos, hipotecas, créditos) proporcionan dinero de inmediato a cambio del compromiso de devolver el capital más los intereses pactados."
+  },
+  {
+    q: "De los productos de ahorro es correcto afirmar que:",
+    opts: [
+      "En depósitos a interés compuesto mensual los intereses se aplican a final de año.",
+      "Consiste en depositar dinero durante un tiempo acordado que se devuelve capitalizado con los intereses generados.",
+      "Un depósito a interés simple se capitaliza más que uno a interés compuesto.",
+      "Todas las anteriores son correctas."
+    ],
+    correct: 1,
+    justification: "Un depósito bancario es exactamente eso: se entrega capital durante un plazo y al vencimiento la entidad devuelve el capital más los intereses devengados (capitalización)."
+  },
+  {
+    q: "Acerca de los productos de inversión:",
+    opts: [
+      "Los planes de pensiones ofrecen muy alta rentabilidad.",
+      "Generalmente, a mayor riesgo financiero, mayor rentabilidad potencial.",
+      "El riesgo de cambio está asociado a la variación de los tipos de interés.",
+      "El riesgo de liquidez está asociado a inversiones con cambio de divisa."
+    ],
+    correct: 1,
+    justification: "La relación riesgo-rentabilidad es un principio básico de las finanzas: activos más arriesgados deben ofrecer mayor rentabilidad esperada para que el inversor acepte ese riesgo."
+  },
+  {
+    q: "De los productos de financiación:",
+    opts: [
+      "Los intereses se aplican siempre sobre capital ya amortizado.",
+      "Amortizar capital significa pagar intereses mensualmente.",
+      "Pagar más rápido la deuda genera más intereses totales.",
+      "La cuota mensual generalmente se compone de intereses y capital amortizado."
+    ],
+    correct: 3,
+    justification: "En el sistema francés (el más habitual en España), cada cuota incluye una parte de intereses (calculada sobre el capital pendiente) y una parte de amortización de capital."
+  },
+  {
+    q: "¿Cuál es la diferencia principal entre el sistema de amortización francés y el italiano?",
+    opts: [
+      "En el francés las cuotas son constantes; en el italiano las cuotas de capital son constantes pero los intereses van disminuyendo.",
+      "En el francés se devuelve todo el capital al final; en el italiano las cuotas son crecientes.",
+      "En el francés no se pagan intereses; en el italiano sí.",
+      "Ambos sistemas son idénticos en la práctica."
+    ],
+    correct: 0,
+    justification: "En el sistema francés (el más usado en hipotecas españolas) la cuota total es siempre la misma, aunque varía la proporción entre intereses y capital. En el italiano, la amortización de capital es constante cada mes, pero los intereses bajan porque se calculan sobre el capital pendiente, que decrece."
+  },
+  {
+    q: "Al solicitar un préstamo hipotecario debemos tener en cuenta:",
+    opts: [
+      "Solo las comisiones de apertura.",
+      "Que la vinculación de productos puede implicar descuentos en el tipo de interés pero también gastos adicionales.",
+      "Que el plazo de amortización es siempre fijo e independiente de nuestra capacidad de pago.",
+      "Ninguna de las anteriores."
+    ],
+    correct: 1,
+    justification: "Domiciliar nómina, contratar seguros o tarjetas vinculadas puede reducir el diferencial pero supone un coste mensual extra que hay que evaluar comparativamente."
+  },
+  {
+    q: "En el sistema de amortización americano:",
+    opts: [
+      "Las cuotas mensuales son constantes.",
+      "Las cuotas disminuyen cada mes.",
+      "Se devuelve todo el capital al final del préstamo.",
+      "Se pagan cuotas de capital constantes más intereses variables."
+    ],
+    correct: 2,
+    justification: "En el sistema americano durante la vida del préstamo solo se pagan intereses; el capital íntegro se devuelve en el último pago (bullet). Se usa frecuentemente en bonos y emisiones corporativas."
+  },
+  {
+    q: "Según el préstamo personal Santander del cuestionario (15 000 €, 60 meses, comisión de apertura 225 €), el importe total financiado es:",
+    opts: [
+      "15 000 €, sin incluir la comisión de apertura.",
+      "15 225 €, incluyendo la comisión de apertura.",
+      "14 775 €, descontando la comisión de apertura.",
+      "No puede determinarse con los datos mostrados."
+    ],
+    correct: 1,
+    justification: "El importe total financiado = 15 000 € (capital) + 225 € (comisión de apertura financiada) = 15 225 €, tal como aparece en el simulador mostrado en el cuestionario."
+  },
+
+
+  // --- APARATO LOCOMOTOR (30 preguntas) ---
+  {
+    q: "¿Cuáles son los huesos de la pierna?",
+    opts: ["Tarso, rótula y tibia", "Carpo, fémur y tibia", "Peroné, tarso y cúbito", "Fémur, rótula, tibia y peroné"],
+    correct: 3,
+    justification: "Los huesos de la pierna son fémur (muslo), rótula (rodilla), tibia y peroné. El tarso es del pie; el carpo de la muñeca; el cúbito del brazo."
+  },
+  {
+    q: "¿Cuál es la función principal de los tendones?",
+    opts: ["Unen músculos entre sí", "Unen huesos y músculos", "Unen huesos entre sí", "Unen ligamentos y huesos"],
+    correct: 1,
+    justification: "Los tendones unen músculos a huesos, transmitiendo el movimiento al esqueleto. Las aponeurosis unen músculos; los ligamentos unen huesos entre sí."
+  },
+  {
+    q: "¿Qué músculos están ubicados en la cabeza?",
+    opts: ["Diafragma, buccinador y risorio", "Masetero, buccinador y risorio", "Masetero, buccinador, risorio y detrusor", "Masetero, buccinador y sóleo"],
+    correct: 1,
+    justification: "Masetero (masticación), buccinador (mejilla) y risorio (sonrisa) son músculos faciales. El diafragma está en el tórax; el detrusor en la vejiga; el sóleo en la pierna."
+  },
+  {
+    q: "Los esguinces afectan específicamente a…",
+    opts: ["Huesos", "Músculos", "Ligamentos", "Ligamentos y tendones a la vez"],
+    correct: 2,
+    justification: "Un esguince estira o rompe parcialmente un ligamento. Afectar huesos es fractura; músculos es desgarro; tendones es tendinitis. Solo afecta ligamentos."
+  },
+  {
+    q: "¿Cómo se clasifica el músculo trapecio?",
+    opts: ["Es un hueso", "Músculo estriado cardíaco", "Músculo estriado esquelético", "Músculo liso"],
+    correct: 2,
+    justification: "El trapecio es voluntario (espalda y cuello), clasificado como estriado esquelético. El cardíaco y el liso son involuntarios."
+  },
+  {
+    q: "¿Cuál es la causa principal de la artritis reumatoide?",
+    opts: ["Predisposición hereditaria", "La edad avanzada", "Un traumatismo directo", "Infecciones víricas"],
+    correct: 0,
+    justification: "La predisposición genética es el factor clave de la artritis reumatoide. La edad se relaciona más con la artrosis, que es una enfermedad diferente."
+  },
+  {
+    q: "¿Qué tipo de tejido muscular tiene contracción voluntaria?",
+    opts: ["Estriado esquelético", "Estriado cardíaco", "Liso", "Peritoneal"],
+    correct: 0,
+    justification: "Solo el estriado esquelético se contrae voluntariamente. El cardíaco y el liso son involuntarios. El peritoneal no es un tipo de músculo."
+  },
+  {
+    q: "¿En qué estructura se encuentra el perimisio?",
+    opts: ["En cartílagos y músculos", "En los músculos", "En los huesos", "En el cartílago"],
+    correct: 1,
+    justification: "El perimisio rodea cada fascículo muscular y solo existe en los músculos. En el cartílago está el pericondrio; en los huesos, el periostio."
+  },
+  {
+    q: "¿Por qué estructura está formado el esqueleto humano?",
+    opts: ["Huesos, cartílago y articulaciones", "Huesos, cartílagos, músculos y articulaciones", "Huesos, cartílagos y articulaciones", "Huesos, músculos y cartílagos"],
+    correct: 2,
+    justification: "El esqueleto lo forman huesos, cartílagos y articulaciones. Los músculos pertenecen al sistema muscular; los nervios al sistema nervioso."
+  },
+  {
+    q: "¿Qué característica define a la artrosis?",
+    opts: ["Tiene carácter infeccioso", "Tiene carácter degenerativo y hereditario", "Tiene carácter hereditario principal", "Tiene carácter degenerativo"],
+    correct: 3,
+    justification: "La artrosis es una enfermedad degenerativa del cartílago articular. No es infecciosa ni principalmente hereditaria."
+  },
+  {
+    q: "¿Qué es el endomisio?",
+    opts: ["La capa que rodea todo el músculo", "La capa que rodea cada fascículo muscular", "La capa más fina que rodea cada fibra muscular individual", "El tejido que une el músculo al hueso"],
+    correct: 2,
+    justification: "El endomisio es la capa más interna y delgada de tejido conectivo que rodea cada fibra muscular individual. El perimisio rodea fascículos y el epimisio rodea todo el músculo."
+  },
+  {
+    q: "¿Cuál es la función del epimisio?",
+    opts: ["Rodea cada fibra muscular individual", "Rodea cada fascículo muscular", "Rodea y protege todo el músculo completo", "Une el músculo al hueso directamente"],
+    correct: 2,
+    justification: "El epimisio es la capa más externa y resistente que rodea todo el músculo completo. Le da forma y se continúa con la fascia y los tendones."
+  },
+  {
+    q: "¿Qué diferencia hay entre artritis y artrosis?",
+    opts: ["Son la misma enfermedad con distinto nombre", "La artritis es inflamatoria; la artrosis es degenerativa del cartílago", "La artrosis es inflamatoria; la artritis es degenerativa", "Ambas afectan solo a personas mayores"],
+    correct: 1,
+    justification: "La artritis es una inflamación de las articulaciones (puede ser autoinmune, infecciosa…). La artrosis es una enfermedad degenerativa del cartílago articular que se desgasta con el tiempo."
+  },
+  {
+    q: "¿Qué estructura une un hueso con otro hueso?",
+    opts: ["Tendón", "Aponeurosis", "Ligamento", "Perimisio"],
+    correct: 2,
+    justification: "Los ligamentos unen huesos entre sí y estabilizan las articulaciones. Los tendones unen músculos a huesos; las aponeurosis unen músculos entre sí."
+  },
+  {
+    q: "¿Qué tipo de músculo es el corazón?",
+    opts: ["Músculo estriado esquelético voluntario", "Músculo liso involuntario", "Músculo estriado cardíaco involuntario", "Músculo peritoneal"],
+    correct: 2,
+    justification: "El corazón está formado por músculo estriado cardíaco, involuntario (no lo controlamos conscientemente). Es diferente al estriado esquelético (voluntario) y al liso (órganos internos)."
+  },
+  {
+    q: "¿Cuál de estas afirmaciones sobre la gripe es correcta?",
+    opts: ["Es grave en todas las personas", "Está causada por una bacteria", "Está causada por un virus y es muy contagiosa", "Causa frecuentemente vómitos"],
+    correct: 2,
+    justification: "La gripe está causada por el virus influenza y se contagia fácilmente por gotitas. En personas sanas suele ser leve. Los vómitos no son síntoma típico."
+  },
+  {
+    q: "¿Por qué los tendones y músculos no forman parte del sistema óseo?",
+    opts: ["Pertenecen al sistema nervioso", "Pertenecen al sistema muscular", "Pertenecen al sistema circulatorio", "Pertenecen al sistema endocrino"],
+    correct: 1,
+    justification: "Tendones y músculos pertenecen al sistema muscular. Los nervios al sistema nervioso. El sistema óseo lo forman exclusivamente huesos, cartílagos y articulaciones."
+  },
+  {
+    q: "¿Dónde se localiza el músculo recto abdominal?",
+    opts: ["En la espalda", "En el abdomen", "En el muslo", "En el tórax"],
+    correct: 1,
+    justification: "El recto abdominal es el músculo principal de la parte frontal del abdomen, responsable de la flexión del tronco y la compresión abdominal."
+  },
+  {
+    q: "¿Qué tipo de inmunización proporciona una vacuna?",
+    opts: ["Inmunización pasiva", "Inmunización activa", "Inmunización innata", "Inmunización artificial pasiva"],
+    correct: 1,
+    justification: "Las vacunas generan inmunización activa: estimulan al organismo a producir sus propios anticuerpos. La pasiva es cuando se reciben anticuerpos ya fabricados (sueros, leche materna)."
+  },
+  {
+    q: "Los anticuerpos procedentes de sueros externos proporcionan…",
+    opts: ["Inmunización activa", "Inmunización innata", "Inmunización pasiva", "Inmunización adquirida activa"],
+    correct: 2,
+    justification: "Los sueros aportan anticuerpos ya fabricados (inmunización pasiva). El organismo no los produce por sí mismo. La leche materna también transmite inmunidad pasiva."
+  },
+  {
+    q: "¿Cuál es la medida preventiva ante un fallo mecánico en maquinaria?",
+    opts: ["Formación del trabajador", "Buen mantenimiento", "Instalaciones adecuadas", "Horarios coherentes"],
+    correct: 1,
+    justification: "El fallo mecánico se previene con mantenimiento preventivo. La formación corrige el uso incorrecto; las instalaciones adecuadas cubren el diseño eléctrico y de espacios."
+  },
+  {
+    q: "¿Quiénes son responsables de las normas de seguridad laboral?",
+    opts: ["Solo las empresas", "Solo los trabajadores", "Tanto empresas como trabajadores", "Solo la inspección de trabajo"],
+    correct: 2,
+    justification: "La prevención de riesgos es responsabilidad compartida: la empresa proporciona condiciones seguras y EPIs; el trabajador usa correctamente los equipos y sigue las normas."
+  },
+  {
+    q: "¿Qué músculo facial produce la expresión de la sonrisa?",
+    opts: ["Masetero", "Frontal", "Temporal", "Risorio"],
+    correct: 3,
+    justification: "El risorio produce la sonrisa. El masetero y el temporal intervienen en la masticación; el frontal levanta las cejas."
+  },
+  {
+    q: "¿Qué EPI se usa para trabajos en altura (subido en un poste)?",
+    opts: ["Careta oscura", "Chaleco plomado", "Arnés de seguridad", "Cascos para oídos"],
+    correct: 2,
+    justification: "El arnés evita caídas en trabajos en altura. La careta oscura se usa en soldadura; el chaleco plomado en radiografías; los cascos para oídos contra el ruido."
+  },
+  {
+    q: "¿Qué es la clavícula?",
+    opts: ["El hueso largo que une el esternón con el omóplato", "Un hueso de la caja torácica", "El hueso que articula el hombro con el brazo", "La parte superior del esternón"],
+    correct: 0,
+    justification: "La clavícula conecta el esternón con la escápula (omóplato), formando parte de la cintura escapular."
+  },
+  {
+    q: "¿Cuál es la medida preventiva ante la fatiga laboral?",
+    opts: ["Formación del trabajador", "Buen mantenimiento de maquinaria", "Instalaciones adecuadas", "Horarios coherentes con descansos"],
+    correct: 3,
+    justification: "La fatiga se reduce con horarios razonables y descansos adecuados. La formación combate la falta de experiencia; el mantenimiento previene fallos mecánicos."
+  },
+  {
+    q: "¿Qué microorganismos se usan para fabricar cerveza?",
+    opts: ["Bacterias patógenas", "Protistas", "Las levaduras (hongos)", "Virus atenuados"],
+    correct: 2,
+    justification: "Las levaduras son hongos usados en la fermentación para fabricar cerveza, vino y pan. No todos los microorganismos son perjudiciales."
+  },
+  {
+    q: "¿Qué EPI se usa para realizar una radiografía (protección ante radiación ionizante)?",
+    opts: ["Arnés de seguridad", "Chaleco plomado", "Careta oscura", "Cascos para oídos"],
+    correct: 1,
+    justification: "El chaleco plomado protege de la radiación ionizante en procedimientos radiológicos. El arnés es para alturas; la careta oscura para soldadura; los cascos para el ruido."
+  },
+  {
+    q: "¿Qué medida preventiva se aplica ante la falta de experiencia del trabajador?",
+    opts: ["Buen mantenimiento", "Formación adecuada", "Instalaciones adecuadas", "Indumentaria apropiada"],
+    correct: 1,
+    justification: "La falta de experiencia se compensa con formación. El mantenimiento previene fallos mecánicos; las instalaciones adecuadas cubren el diseño del espacio de trabajo."
+  },
+  {
+    q: "¿Cuál es la función del músculo esternocleidomastoideo?",
+    opts: ["Participa en la masticación", "Permite los movimientos de cabeza y cuello", "Produce la expresión facial de la sonrisa", "Eleva las cejas"],
+    correct: 1,
+    justification: "El esternocleidomastoideo es un músculo del cuello que permite la flexión, rotación e inclinación lateral de la cabeza. Se localiza a ambos lados del cuello."
+  },
+  {
+    q: "¿Qué músculo es el responsable principal del cierre de la mandíbula durante la masticación?",
+    opts: ["Temporal", "Esternocleidomastoideo", "Masetero", "Orbicular de la boca"],
+    correct: 2,
+    justification: "El masetero es un músculo corto y potente situado en la mejilla. Es el principal elevador de la mandíbula y el más importante en la masticación."
+  },
+
+
+  // --- SALUD, ENFERMEDADES E INMUNOLOGÍA ---
+  {
+    q: "¿Cuál es la definición correcta de salud según la OMS?",
+    opts: ["Ausencia total de enfermedades", "Bienestar físico únicamente", "Estado de completo bienestar físico, mental y social", "No padecer dolencias crónicas"],
+    correct: 2,
+    justification: "La OMS define la salud como un estado de completo bienestar físico, mental y social, no solo la ausencia de enfermedad."
+  },
+  {
+    q: "¿Cuáles son los cinco determinantes de la salud según el modelo de Lalonde?",
+    opts: ["Genética, alimentación, sueño, trabajo y azar", "Genética, estilo de vida, sistema sanitario, medio ambiente y azar", "Herencia, ejercicio, hospital, entorno y suerte", "Genes, dieta, médico, aire y accidente"],
+    correct: 1,
+    justification: "Los cinco grandes determinantes son: genética, estilo de vida, sistema sanitario, medio ambiente y azar."
+  },
+  {
+    q: "¿Qué estudia la etiología?",
+    opts: ["Los remedios para evitar enfermedades", "Los signos externos de una enfermedad", "Las causas y el origen de las enfermedades", "La evolución del sistema inmune"],
+    correct: 2,
+    justification: "La etiología es la rama de la medicina que estudia el origen y las causas de las enfermedades."
+  },
+  {
+    q: "¿A qué se deben las enfermedades infecciosas?",
+    opts: ["A sustancias tóxicas como drogas", "A microorganismos patógenos", "A la degeneración del organismo", "A factores hereditarios exclusivamente"],
+    correct: 1,
+    justification: "Las enfermedades infecciosas son causadas por microorganismos patógenos: bacterias, virus, hongos, protozoos y parásitos."
+  },
+  {
+    q: "¿Qué es una enfermedad aguda?",
+    opts: ["La que dura para siempre", "La que es originada por microbios", "La que no dura para siempre y aparece de forma brusca", "La que solo afecta a personas mayores"],
+    correct: 2,
+    justification: "Una enfermedad aguda aparece de forma repentina, evoluciona rápido y dura poco tiempo, a diferencia de la crónica que se prolonga."
+  },
+  {
+    q: "¿Cuál de las siguientes opciones NO es un signo clínico?",
+    opts: ["Fiebre", "SIDA", "Inflamación", "Erupción cutánea"],
+    correct: 1,
+    justification: "Un signo es algo objetivo y medible (fiebre, inflamación, erupción). El SIDA no es un signo, es una enfermedad causada por el VIH."
+  },
+  {
+    q: "¿Cuál de las siguientes NO es una enfermedad, sino un síntoma?",
+    opts: ["Neumonía", "Cefalea", "Diabetes", "SIDA"],
+    correct: 1,
+    justification: "La cefalea (dolor de cabeza) es un síntoma, no una enfermedad. Neumonía, diabetes y SIDA sí son enfermedades."
+  },
+  {
+    q: "¿Cuál de estas enfermedades NO es infecciosa?",
+    opts: ["Gripe", "Cáncer de faringe", "Malaria", "COVID-19"],
+    correct: 1,
+    justification: "El cáncer de faringe no es infeccioso; es una enfermedad no transmisible relacionada con mutaciones celulares y factores como el tabaco o el alcohol."
+  },
+  {
+    q: "En inmunología, ¿qué es un vector?",
+    opts: ["El microorganismo que causa la enfermedad directamente", "Los síntomas de la enfermedad infecciosa", "Un ser vivo utilizado por el microorganismo para introducirse en el hospedador", "Un anticuerpo defensivo"],
+    correct: 2,
+    justification: "Un vector es un ser vivo (ej. mosquito Anopheles) que transporta un microorganismo patógeno y lo introduce en el hospedador."
+  },
+  {
+    q: "¿Cuál de los siguientes NO es un agente infeccioso?",
+    opts: ["Virus", "Bacteria", "Prión", "Mosquito Anopheles"],
+    correct: 3,
+    justification: "El Anopheles es un mosquito vector, no un agente infeccioso. Los agentes infecciosos son los microorganismos que causan la infección (virus, bacteria, prión, etc.)."
+  },
+  {
+    q: "¿Todos los microorganismos patógenos son células?",
+    opts: ["Sí, según la Teoría Celular", "No, salvo los virus y los hexones", "No, los virus no son células", "Sí, hay unicelulares y pluricelulares"],
+    correct: 2,
+    justification: "Los virus NO son células: carecen de estructura celular, no tienen metabolismo propio y necesitan infectar una célula para reproducirse."
+  },
+  {
+    q: "¿Qué afirmación sobre las bacterias es FALSA?",
+    opts: ["Todas las bacterias son microorganismos patógenos", "Las bacterias presentan un solo cromosoma", "Las bacterias son necesarias para la vida humana", "Las bacterias son células procariotas con amplia distribución ecológica"],
+    correct: 0,
+    justification: "Es falso que todas las bacterias sean patógenas. La mayoría son beneficiosas: flora intestinal, fermentación, bacterias del suelo, etc."
+  },
+  {
+    q: "¿Cuáles son las defensas inmunológicas externas (barreras primarias)?",
+    opts: ["Solo la piel", "Piel, lisozima y sistema complemento", "Sistema complemento y macrófagos", "Piel y lisozima"],
+    correct: 3,
+    justification: "Las defensas externas son la piel (barrera física) y la lisozima (enzima antimicrobiana en lágrimas y saliva). El sistema complemento actúa internamente."
+  },
+  {
+    q: "¿Cuáles son órganos del sistema inmunológico?",
+    opts: ["Timo y páncreas", "Timo y mucosas", "Placas de Peyer, Timo y Páncreas", "Timo, Placas de Peyer y Médula Ósea"],
+    correct: 3,
+    justification: "Los órganos linfoides incluyen el timo y la médula ósea (primarios) y las Placas de Peyer, ganglios, bazo y amígdalas (secundarios). El páncreas no es inmunológico."
+  },
+  {
+    q: "¿Qué son los antígenos?",
+    opts: ["Mecanismos internos de defensa inmunológica", "Anticuerpos producidos por linfocitos B", "Sustancias formadas por linfocitos para destruir patógenos", "Sustancias del agente infeccioso que desencadenan la respuesta inmunológica"],
+    correct: 3,
+    justification: "Los antígenos son sustancias extrañas procedentes de agentes infecciosos que activan el sistema inmunitario y provocan una respuesta inmunológica."
+  },
+  {
+    q: "¿Qué son los anticuerpos?",
+    opts: ["Sustancias formadas por los linfocitos T", "Sustancias formadas por los linfocitos B", "Sustancias del microorganismo patógeno", "Sustancias de las mucosas defensivas"],
+    correct: 1,
+    justification: "Los anticuerpos son proteínas producidas por los linfocitos B (células plasmáticas) que se unen al patógeno para neutralizarlo o marcarlo para su destrucción."
+  },
+  {
+    q: "¿Cuáles son los tipos de leucocitos?",
+    opts: ["Anticuerpos y linfocitos", "Linfocitos y antígenos", "Lisozima y linfocitos T", "Linfocitos y granulocitos"],
+    correct: 3,
+    justification: "Los leucocitos (glóbulos blancos) incluyen linfocitos (B, T y NK), granulocitos (neutrófilos, eosinófilos, basófilos) y monocitos/macrófagos."
+  },
+  {
+    q: "¿Cuál es la función principal de los macrófagos?",
+    opts: ["Síntesis de anticuerpos", "Realizar la fagocitosis", "Síntesis de antígenos", "Producir linfocitos T"],
+    correct: 1,
+    justification: "Los macrófagos realizan la fagocitosis: engullen y destruyen microorganismos. También eliminan células muertas y presentan antígenos a los linfocitos T."
+  },
+  {
+    q: "La sueroterapia es un tipo de inmunidad...",
+    opts: ["Artificial no permanente", "Artificial permanente", "Natural no permanente", "Natural permanente"],
+    correct: 0,
+    justification: "La sueroterapia inyecta anticuerpos ya formados (artificial) que se degradan con el tiempo sin generar memoria inmunológica (no permanente)."
+  },
+  {
+    q: "En una vacunación, ¿quién elabora los anticuerpos?",
+    opts: ["Otros seres vivos coadyuvantes", "Los linfocitos B del vacunado", "Los macrófagos", "El laboratorio farmacéutico directamente"],
+    correct: 1,
+    justification: "Las vacunas estimulan al sistema inmunitario. Los linfocitos B se transforman en células plasmáticas que producen anticuerpos específicos."
+  },
+  {
+    q: "¿Contra qué son eficaces los antibióticos?",
+    opts: ["Bacterias", "Virus, prión y bacterias", "Virus, protozoos y bacterias", "Solo los virus"],
+    correct: 0,
+    justification: "Los antibióticos solo son eficaces contra bacterias. No actúan sobre virus, priones, hongos ni protozoos."
+  },
+  {
+    q: "¿Qué se administra en la sueroterapia?",
+    opts: ["Antígenos atenuados", "Anticuerpos ya formados", "Antibióticos intravenosos", "Linfocitos B externos"],
+    correct: 1,
+    justification: "En la sueroterapia se administran anticuerpos ya formados (suero antitetánico, antiofídico…) que neutralizan rápidamente al patógeno o toxina."
+  },
+  {
+    q: "¿Cuál de estos es un caso de inmunidad natural pasiva?",
+    opts: ["Sueroterapia", "Vacunación", "Lactancia materna", "Quimioterapia"],
+    correct: 2,
+    justification: "La lactancia materna es inmunidad natural pasiva: el bebé recibe anticuerpos IgA de la madre a través de la leche sin intervención médica."
+  },
+  {
+    q: "¿Qué se administra a una persona durante la vacunación?",
+    opts: ["Antibióticos", "Antígenos atenuados o inactivados", "Anticuerpos ya formados", "Linfocitos T del donante"],
+    correct: 1,
+    justification: "En la vacunación se administran antígenos atenuados, inactivados o fragmentos del patógeno que estimulan al sistema inmune sin causar la enfermedad."
+  },
+  {
+    q: "¿Qué son la aspirina y el paracetamol?",
+    opts: ["Analgésicos y antipiréticos", "Antibióticos", "Antisépticos", "Antígenos terapéuticos"],
+    correct: 0,
+    justification: "La aspirina y el paracetamol son analgésicos (alivian el dolor) y antipiréticos (reducen la fiebre). No combaten bacterias ni desinfectan superficies."
+  },
+  {
+    q: "¿Quién descubrió la penicilina?",
+    opts: ["Alexander Fleming", "Severo Ochoa", "Santiago Ramón y Cajal", "Edward Jenner"],
+    correct: 0,
+    justification: "Alexander Fleming descubrió la penicilina en 1928 al observar que el hongo Penicillium notatum inhibía el crecimiento de bacterias en una placa de cultivo."
+  },
+  {
+    q: "¿Qué enfermedad vírica ha sido erradicada completamente del planeta?",
+    opts: ["Polio", "Malaria", "Tuberculosis", "Viruela"],
+    correct: 3,
+    justification: "La viruela es la única enfermedad erradicada gracias a campañas de vacunación masiva. El último caso natural fue en 1977 y en 1980 la OMS la declaró oficialmente erradicada."
+  },
+  {
+    q: "¿Qué son las enfermedades endocrinas?",
+    opts: ["Las relacionadas con la sangre", "Las relacionadas con las hormonas", "Los trastornos carenciales", "Las enfermedades de transmisión sexual"],
+    correct: 1,
+    justification: "Las enfermedades endocrinas afectan al sistema endocrino (glándulas productoras de hormonas). Ejemplos: diabetes mellitus, hipotiroidismo, enfermedad de Cushing."
+  },
+  {
+    q: "¿Qué diferencia un signo de un síntoma?",
+    opts: ["No hay diferencia, son lo mismo", "El signo es subjetivo y el síntoma es objetivo", "El signo es objetivo y medible; el síntoma es subjetivo", "Los signos solo los detecta el médico en análisis de sangre"],
+    correct: 2,
+    justification: "Un signo es algo objetivo y medible por otra persona (fiebre, inflamación). Un síntoma es subjetivo, solo lo describe el paciente (dolor, mareo)."
+  },
+  {
+    q: "¿Cuál es la función principal de los linfocitos T?",
+    opts: ["Producir anticuerpos directamente", "Realizar la fagocitosis", "Destruir células infectadas y coordinar la respuesta inmune adaptativa", "Actuar como barrera física externa"],
+    correct: 2,
+    justification: "Los linfocitos T no producen anticuerpos. Su función es destruir células infectadas y coordinar la respuesta inmune adaptativa. Los anticuerpos los producen los linfocitos B."
+  },
+  {
+    q: "¿Qué son los microorganismos patógenos?",
+    opts: ["Todas las bacterias sin excepción", "Los microorganismos capaces de causar enfermedades", "Los microorganismos que no causan enfermedades", "Solo los protozoos y hongos"],
+    correct: 1,
+    justification: "Los microorganismos patógenos son aquellos capaces de causar enfermedades en el ser humano, animales o plantas. No todos los microorganismos son patógenos."
+  }
+];
+
+// ============================================================
+// QUIZ ENGINE — one question at a time
+// ============================================================
+const TOTAL = 40;
+let selectedQuestions = [];  // {q, opts(shuffled), correct(new index), justification}
+let states = [];             // per-question: {chosen: null|index, isCorrect: null}
+let currentIndex = 0;
+let score = 0;
+let wrong = 0;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickQuestions() {
+  const pool = shuffle([...BANK]);
+  return pool.slice(0, Math.min(TOTAL, pool.length)).map(q => {
+    const indices = shuffle([0, 1, 2, 3]);
+    return {
+      q: q.q,
+      opts: indices.map(i => q.opts[i]),
+      correct: indices.indexOf(q.correct),
+      justification: q.justification
+    };
+  });
+}
+
+function buildQuiz() {
+  score = 0; wrong = 0; currentIndex = 0;
+  selectedQuestions = pickQuestions();
+  states = selectedQuestions.map(() => ({ chosen: null, isCorrect: null }));
+
+  buildDots();
+  renderQuestion(0);
+
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildDots() {
+  const nav = document.getElementById('dot-nav');
+  nav.innerHTML = '';
+  selectedQuestions.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'dot';
+    d.id = `dot-${i}`;
+    d.textContent = i + 1;
+    d.onclick = () => goTo(i);
+    nav.appendChild(d);
+  });
+}
+
+function renderQuestion(idx) {
+  currentIndex = idx;
+  const q = selectedQuestions[idx];
+  const st = states[idx];
+  const letters = ['a', 'b', 'c', 'd'];
+
+  document.getElementById('q-number').textContent = `Pregunta ${idx + 1} de ${selectedQuestions.length}`;
+  document.getElementById('q-text').textContent = q.q;
+
+  // Options
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = q.opts.map((opt, oi) => `
+    <button class="option${st.chosen === oi ? (st.isCorrect ? ' correct' : ' wrong') : (st.chosen !== null && oi === q.correct ? ' correct' : '')}"
+            id="opt-${oi}"
+            onclick="selectOption(${oi})"
+            ${st.chosen !== null ? 'disabled' : ''}>
+      <span class="letter">${letters[oi]}</span>
+      <span>${opt}</span>
+    </button>`).join('');
+
+  // Feedback
+  const fb = document.getElementById('q-feedback');
+  if (st.chosen !== null) {
+    fb.className = `feedback show ${st.isCorrect ? 'correct' : 'wrong'}`;
+    fb.innerHTML = `<strong>${st.isCorrect ? '✓ Correcto' : '✗ Incorrecto'}</strong>${q.justification}`;
+  } else {
+    fb.className = 'feedback';
+    fb.innerHTML = '';
+  }
+
+  updateNav();
+  updateDots();
+  updateProgress();
+
+  // Scroll card into view smoothly
+  document.getElementById('question-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectOption(oi) {
+  const st = states[currentIndex];
+  if (st.chosen !== null) return;
+
+  const q = selectedQuestions[currentIndex];
+  st.chosen = oi;
+  st.isCorrect = (oi === q.correct);
+  if (st.isCorrect) score++; else wrong++;
+
+  renderQuestion(currentIndex);
+}
+
+function handleNext() {
+  if (currentIndex < selectedQuestions.length - 1) {
+    goTo(currentIndex + 1);
+  } else {
+    submitQuiz();
+  }
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx >= selectedQuestions.length) return;
+  renderQuestion(idx);
+}
+
+function updateNav() {
+  const isLast = currentIndex === selectedQuestions.length - 1;
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+
+  prevBtn.disabled = currentIndex === 0;
+  prevBtn.style.opacity = currentIndex === 0 ? '0.35' : '1';
+
+  if (isLast) {
+    nextBtn.textContent = 'Ver resultados →';
+  } else {
+    nextBtn.textContent = 'Siguiente →';
+  }
+
+  // Only enable next if answered (or allow free navigation to already-seen questions)
+  const st = states[currentIndex];
+  nextBtn.disabled = st.chosen === null && !isLast;
+  nextBtn.style.opacity = (st.chosen === null && !isLast) ? '0.35' : '1';
+}
+
+function updateDots() {
+  selectedQuestions.forEach((_, i) => {
+    const d = document.getElementById(`dot-${i}`);
+    if (!d) return;
+    d.className = 'dot';
+    if (i === currentIndex) d.classList.add('active');
+    else if (states[i].chosen !== null) {
+      d.classList.add(states[i].isCorrect ? 'correct-dot' : 'wrong-dot');
+    }
+  });
+}
+
+function updateProgress() {
+  const answered = states.filter(s => s.chosen !== null).length;
+  const pct = Math.round((answered / selectedQuestions.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent =
+    `Pregunta ${currentIndex + 1} de ${selectedQuestions.length}`;
+  document.getElementById('score-live').innerHTML =
+    `<span style="color:var(--correct)">✓ ${score}</span>&nbsp;&nbsp;<span style="color:var(--wrong)">✗ ${wrong}</span>`;
+}
+
+function submitQuiz() {
+  const answered = states.filter(s => s.chosen !== null).length;
+  if (answered < selectedQuestions.length) {
+    if (!confirm(`Quedan ${selectedQuestions.length - answered} preguntas sin responder. ¿Entregar igualmente?`)) return;
+  }
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const panel = document.getElementById('result-panel');
+  panel.style.display = 'block';
+
+  const pct = Math.round((score / selectedQuestions.length) * 100);
+  let title, msg;
+  if (pct >= 90)      { title = '¡Sobresaliente!'; msg = 'Dominio excelente de los contenidos. ¡Enhorabuena!'; }
+  else if (pct >= 70) { title = '¡Notable!';        msg = 'Buen nivel. Repasa los fallos para consolidar el aprendizaje.'; }
+  else if (pct >= 50) { title = 'Aprobado';         msg = 'Has superado el umbral mínimo. Conviene repasar los temas con más errores.'; }
+  else                { title = 'Suspendido';        msg = 'Necesitas repasar los contenidos. ¡No te rindas, vuelve a intentarlo!'; }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-score').textContent = score;
+  document.getElementById('result-denom').textContent = `de ${selectedQuestions.length}`;
+  document.getElementById('result-msg').textContent = `${msg} (${pct} %)`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartQuiz() { buildQuiz(); }
+
+// Start
+buildQuiz();
+</script>
+</body>
+</html>
